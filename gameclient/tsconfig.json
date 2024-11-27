@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "../static",  // Output to Go's static folder
+    "rootDir": ".",             // Location of TypeScript source files
+    "target": "es5",                // Browser-compatible JavaScript
+    "module": "es6",                // Use ES6 modules
+    "strict": true                  // Enable strict type-checking
+  },
+  "include": ["./main.ts"]           // Include all TypeScript files
+  }
+
