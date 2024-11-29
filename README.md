@@ -1,5 +1,7 @@
 # Raycasted 2.5D Horror Game
 
+[LINK TO PLAY HERE](#)
+
 ## Motivation
 
 How Important is Sound in Horror Games Compared to Visuals?
