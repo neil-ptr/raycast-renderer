@@ -3,36 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Game</title>
+  <title>Horror Game</title>
   <style>
-html, body {
-  margin: 0; 
-  padding: 0; 
-  box-sizing: border-box;
-}
-
-#game-viewport {
-    position:fixed;
-    left:0;
-    top:0;
-
-    overflow: hidden;
-}
-
+    html, body {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
   </style>
 
 </head>
 <body>
-  <canvas id="game-viewport" width="900" height="700" style="border: 1px solid black;"></canvas>
-    <script type="module">
-      import init, { main } from './raycast_game.js';
+  <script type="module">
+    import init from './raycast_game.js';
 
-      async function run() {
-        await init();
-        main();
-      }
+    async function run() {
+      await init();
+    }
 
-      run().catch(console.error);
-    </script>
+    run().catch(console.error);
+  </script>
+
+  <div>
+    <canvas id="map" width="300" height="300" style="border: 1px solid black;"></canvas>
+  </div>
+  <div>
+    <canvas id="game-viewport" width="600" height="338" style="border: 1px solid black;"></canvas>
+  </div>
 </body>
 </html>
