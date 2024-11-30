@@ -1,6 +1,6 @@
 # Raycasted 2.5D Horror Game
 
-[LINK TO PLAY HERE](#)
+[PLAY HERE](#) Earbuds + Fullscreen is recommended
 
 ## Motivation
 
@@ -23,3 +23,4 @@ No major frameworks used really, wanted to write the raycaster from scratch in r
 
 ### Commands
 * `wasm-pack build --out-dir ../static --target web`: compiles rust to wasm and puts it in the static directory of the Go app
+* `cargo watch -s "wasm-pack build --out-dir ../static --target web && echo 'Recompiled!'"`: hot reloading
