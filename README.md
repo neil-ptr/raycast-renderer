@@ -11,7 +11,7 @@ Sound plays a crucial role in defining the horror experience, often surpassing v
 This project seeks to explore this by crafting a retro-inspired 2.5D horror game that combines simple retro visuals with a strrong focus on proximity chat and sound. 
 
 ## Technologies
-No major frameworks used really, wanted to write the raycaster from scratch in rust. Chose Rust because I liked the `rust-wasm` api compared to c++'s `emscripten`
+No major frameworks or libraries used really, wanted to write the raycaster from scratch. Chose to use WASM instead of writing JS since I want to I really want to focus on simulating sound propagation and don't want to worry about performance too much. Chose Rust because I liked the `rust-wasm` api compared to c++'s `emscripten`.
 
 ### Raycasting game engine
 - rust
