@@ -11,7 +11,7 @@ static MAP: &'static [[char; 8]; 8] = &[
     ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
     ['w', '0', '0', '0', '0', '0', '0', 'w'],
     ['w', '0', '0', '0', '0', '0', '0', '1'],
-    ['w', '0', '0', '0', '0', '0', '0', 'w'],
+    ['w', '0', '0', '0', '0', '2', '0', 'w'],
     ['w', '0', '0', '0', '0', '0', '0', '2'],
     ['w', '0', '0', '0', '0', '0', '0', 'w'],
     ['w', '0', '0', '0', '0', '0', '0', '3'],
@@ -99,8 +99,11 @@ pub fn main() {
     }));
     let player_clone = player.clone();
 
+    let keyup_handler = Closure::<dyn FnMut(KeyboardEvent)>::new(move |event: KeyboardEvent| {});
+
     let keydown_handler = Closure::<dyn FnMut(KeyboardEvent)>::new(move |event: KeyboardEvent| {
         let mut player = player_clone.borrow_mut(); // Access player with interior mutability
+
         match event.key().as_str() {
             // Move forward
             "w" => {
@@ -162,22 +165,22 @@ pub fn main() {
             _ => {}
         }
 
-        console::log_3(
-            &"position".into(),
-            &player.position.x.into(),
-            &player.position.y.into(),
-        );
-        console::log_3(
-            &"direaction".into(),
-            &player.direction.x.into(),
-            &player.direction.y.into(),
-        );
-
-        console::log_3(
-            &"camera".into(),
-            &player.camera.x.into(),
-            &player.camera.y.into(),
-        );
+        // console::log_3(
+        //     &"position".into(),
+        //     &player.position.x.into(),
+        //     &player.position.y.into(),
+        // );
+        // console::log_3(
+        //     &"direaction".into(),
+        //     &player.direction.x.into(),
+        //     &player.direction.y.into(),
+        // );
+        //
+        // console::log_3(
+        //     &"camera".into(),
+        //     &player.camera.x.into(),
+        //     &player.camera.y.into(),
+        // );
     });
     let _ = window
         .borrow()
@@ -249,7 +252,7 @@ pub fn main() {
         );
         map_canvas_2d_context_clone.stroke();
 
-        map_canvas_2d_context_clone.set_fill_style_str("red");
+        map_canvas_2d_context_clone.set_fill_style_str("rebeccapurple");
         map_canvas_2d_context_clone.fill_rect(
             player.position.x * MAP_GRID_CELL_SIZE_PX,
             player.position.y * MAP_GRID_CELL_SIZE_PX,
@@ -282,6 +285,11 @@ pub fn main() {
             };
 
             let mut map_cell_position_x = player.position.x as i32;
+            console::log_3(
+                &"pos".into(),
+                &player.position.x.into(),
+                &map_cell_position_x.into(),
+            );
             let mut map_cell_position_y = player.position.y as i32;
             let step_x: i32;
             let step_y: i32;
@@ -294,10 +302,10 @@ pub fn main() {
                 (player.position.x - map_cell_position_x as f64) * delta_x_intersect
             };
             let mut side_dist_y = if ray_direction.y >= 0.0 {
-                step_y = -1;
+                step_y = 1;
                 ((map_cell_position_y + 1) as f64 - player.position.y) * delta_y_intersect
             } else {
-                step_y = 1;
+                step_y = -1;
                 (player.position.y - map_cell_position_y as f64) * delta_y_intersect
             };
 
