@@ -1,14 +1,14 @@
 mod input;
 mod utils;
 
+use input::{ARROW_LEFT_KEY_IDX, ARROW_RIGHT_KEY_IDX, A_KEY_IDX, D_KEY_IDX, S_KEY_IDX, W_KEY_IDX};
 use std::cell::RefCell;
 use std::f64::consts::PI;
-use std::ops::AddAssign;
-use std::ops::MulAssign;
+// use std::ops::AddAssign;
+// use std::ops::MulAssign;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
-use web_sys::{KeyboardEvent, MouseEvent};
 
 /*
     bottom left (0,0) origin
@@ -42,25 +42,25 @@ struct Vec2D<T> {
     y: T,
 }
 
-impl<T> Vec2D<T>
-where
-    T: MulAssign + AddAssign + Copy,
-{
-    pub fn scale(&mut self, factor: T) {
-        self.x *= factor;
-        self.y *= factor;
-    }
-
-    pub fn add(&mut self, other: Vec2D<T>) {
-        self.x += other.x;
-        self.y += other.y;
-    }
-}
-
-#[derive(Debug)]
-struct Game {
-    players: Vec<Player>,
-}
+// impl<T> Vec2D<T>
+// where
+//     T: MulAssign + AddAssign + Copy,
+// {
+//     pub fn scale(&mut self, factor: T) {
+//         self.x *= factor;
+//         self.y *= factor;
+//     }
+//
+//     pub fn add(&mut self, other: Vec2D<T>) {
+//         self.x += other.x;
+//         self.y += other.y;
+//     }
+// }
+//
+// #[derive(Debug)]
+// struct Game {
+//     players: Vec<Player>,
+// }
 
 #[derive(Debug)]
 pub struct Player {
@@ -75,13 +75,6 @@ enum Axis {
     Vertical,
     Horizontal,
 }
-
-const W_KEY_IDX: usize = 0;
-const A_KEY_IDX: usize = 1;
-const S_KEY_IDX: usize = 2;
-const D_KEY_IDX: usize = 3;
-const ARROW_LEFT_KEY_IDX: usize = 4;
-const ARROW_RIGHT_KEY_IDX: usize = 5;
 
 const WALKING_SPEED: f64 = 0.025;
 const ROTATION_SPEED: f64 = 0.75 * (PI / 180.0); // 10 degrees converted to radians
@@ -127,7 +120,6 @@ pub fn main() {
         mouse_velocity: Vec2D { x: 0.0, y: 0.0 },
     }));
 
-    // attach input handlers
     input::attach_user_event_handlers(&window, player.clone());
 
     let f: Rc<RefCell<Option<Closure<dyn Fn()>>>> = Rc::new(RefCell::new(None));
@@ -213,7 +205,7 @@ pub fn main() {
         }
 
         // Redraw the map grid
-        for (row_index, row) in MAP.iter().rev().enumerate() {
+        for (row_index, row) in MAP.iter().enumerate() {
             for (col_index, cell) in row.iter().enumerate() {
                 let fill_style = match *cell {
                     'w' => "black",
@@ -250,10 +242,13 @@ pub fn main() {
         map_canvas_2d_context_clone.stroke();
 
         map_canvas_2d_context_clone.set_fill_style_str("rebeccapurple");
+
         console::log_2(&player.position.x.into(), &player.position.y.into());
+        console::log_2(&player.direction.x.into(), &player.direction.y.into());
+
         map_canvas_2d_context_clone.fill_rect(
             player.position.y * MAP_GRID_CELL_SIZE_PX,
-            (MAP.len() as f64 - player.position.x) * MAP_GRID_CELL_SIZE_PX,
+            player.position.x * MAP_GRID_CELL_SIZE_PX,
             6.0,
             6.0,
         );
@@ -283,12 +278,22 @@ pub fn main() {
             };
 
             let mut map_cell_position_x = player.position.x as i32;
+            let mut map_cell_position_y = player.position.y as i32;
+
+            // let mut map_col_index = player.position.x as i32;
+            // let mut map_row_index = player.position.y as i32;
+
             console::log_3(
                 &"pos".into(),
                 &player.position.x.into(),
                 &player.position.y.into(),
             );
-            let mut map_cell_position_y = player.position.y as i32;
+            console::log_3(
+                &"dir".into(),
+                &player.direction.x.into(),
+                &player.direction.y.into(),
+            );
+
             let step_x: i32;
             let step_y: i32;
 
@@ -320,7 +325,7 @@ pub fn main() {
                     axis_intersected = Axis::Horizontal;
                 }
 
-                if MAP[map_cell_position_x as usize][map_cell_position_y as usize] != ' ' {
+                if MAP[map_cell_position_y as usize][map_cell_position_x as usize] != ' ' {
                     wall_was_hit = true;
                 }
             }
@@ -343,7 +348,7 @@ pub fn main() {
 
             game_canvas_2d_context.begin_path();
             // Determine the base color
-            let base_color = match MAP[map_cell_position_x as usize][map_cell_position_y as usize] {
+            let base_color = match MAP[map_cell_position_y as usize][map_cell_position_x as usize] {
                 '1' => "red",
                 '2' => "green",
                 '3' => "blue",

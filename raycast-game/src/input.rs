@@ -6,14 +6,17 @@ use crate::Player;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-const W_KEY_IDX: usize = 0;
-const A_KEY_IDX: usize = 1;
-const S_KEY_IDX: usize = 2;
-const D_KEY_IDX: usize = 3;
-const ARROW_LEFT_KEY_IDX: usize = 4;
-const ARROW_RIGHT_KEY_IDX: usize = 5;
+pub const W_KEY_IDX: usize = 0;
+pub const A_KEY_IDX: usize = 1;
+pub const S_KEY_IDX: usize = 2;
+pub const D_KEY_IDX: usize = 3;
+pub const ARROW_LEFT_KEY_IDX: usize = 4;
+pub const ARROW_RIGHT_KEY_IDX: usize = 5;
 
-pub fn attach_event_handlers(window: &Rc<RefCell<web_sys::Window>>, player: Rc<RefCell<Player>>) {
+pub fn attach_user_event_handlers(
+    window: &Rc<RefCell<web_sys::Window>>,
+    player: Rc<RefCell<Player>>,
+) {
     // Mouse move handler
     let player_clone = player.clone();
     let movemove_handler = Closure::<dyn FnMut(MouseEvent)>::new(move |event: MouseEvent| {
