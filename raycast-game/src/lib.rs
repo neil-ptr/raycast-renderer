@@ -63,11 +63,11 @@ struct Game {
 }
 
 #[derive(Debug)]
-struct Player {
+pub struct Player {
     position: Vec2D<f64>,
     direction: Vec2D<f64>,
     camera: Vec2D<f64>,
-    keys_down: [bool; 6], // [w,a,s,d, left, right]
+    keys_down: [bool; 6], // [w,a,s,d,left,right]
     mouse_velocity: Vec2D<f64>,
 }
 
@@ -85,12 +85,12 @@ const ARROW_RIGHT_KEY_IDX: usize = 5;
 
 const WALKING_SPEED: f64 = 0.025;
 const ROTATION_SPEED: f64 = 0.75 * (PI / 180.0); // 10 degrees converted to radians
-const MOUSE_SENSITIVITY: f64 = 0.025;
 
 #[wasm_bindgen(start)]
 pub fn main() {
     utils::set_panic_hook();
 
+    // initialize canvases
     let window = Rc::new(RefCell::new(web_sys::window().unwrap()));
     let document = window.borrow().document().unwrap();
 
@@ -118,25 +118,7 @@ pub fn main() {
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
 
-    // for (row_index, row) in MAP.iter().enumerate() {
-    //     for (col_index, cell) in row.iter().enumerate() {
-    //         let fill_style = match *cell {
-    //             'w' => "black",
-    //             '1' => "red",
-    //             '2' => "green",
-    //             '3' => "blue",
-    //             _ => "white",
-    //         };
-    //
-    //         map_canvas_2d_context.set_fill_style_str(fill_style);
-    //
-    //         let x = col_index as f64 * MAP_GRID_CELL_SIZE_PX;
-    //         let y = row_index as f64 * MAP_GRID_CELL_SIZE_PX;
-    //         map_canvas_2d_context.fill_rect(x, y, MAP_GRID_CELL_SIZE_PX, MAP_GRID_CELL_SIZE_PX);
-    //     }
-    // }
-
-    // ######
+    // initialize game state
     let player = Rc::new(RefCell::new(Player {
         position: Vec2D { x: 2.0, y: 2.0 },
         direction: Vec2D { x: 1.0, y: 0.0 },
@@ -145,85 +127,8 @@ pub fn main() {
         mouse_velocity: Vec2D { x: 0.0, y: 0.0 },
     }));
 
-    let player_clone = player.clone();
-
-    let movemove_handler = Closure::<dyn FnMut(MouseEvent)>::new(move |event: MouseEvent| {
-        let mut player = player_clone.borrow_mut();
-        player.mouse_velocity.x = event.movement_x() as f64;
-        player.mouse_velocity.y = event.movement_y() as f64;
-    });
-
-    let player_clone = player.clone();
-    let keyup_handler = Closure::<dyn FnMut(KeyboardEvent)>::new(move |event: KeyboardEvent| {
-        let mut player = player_clone.borrow_mut();
-
-        match event.key().as_str() {
-            "w" => {
-                player.keys_down[W_KEY_IDX] = false;
-            }
-            "a" => {
-                player.keys_down[A_KEY_IDX] = false;
-            }
-            "s" => {
-                player.keys_down[S_KEY_IDX] = false;
-            }
-            "d" => {
-                player.keys_down[D_KEY_IDX] = false;
-            }
-
-            "ArrowRight" => {
-                player.keys_down[ARROW_RIGHT_KEY_IDX] = false;
-            }
-
-            "ArrowLeft" => {
-                player.keys_down[ARROW_LEFT_KEY_IDX] = false;
-            }
-            _ => {}
-        }
-    });
-
-    let player_clone = player.clone();
-    let keydown_handler = Closure::<dyn FnMut(KeyboardEvent)>::new(move |event: KeyboardEvent| {
-        let mut player = player_clone.borrow_mut();
-
-        match event.key().as_str() {
-            "w" => {
-                player.keys_down[W_KEY_IDX] = true;
-            }
-            "a" => {
-                player.keys_down[A_KEY_IDX] = true;
-            }
-            "s" => {
-                player.keys_down[S_KEY_IDX] = true;
-            }
-            "d" => {
-                player.keys_down[D_KEY_IDX] = true;
-            }
-
-            "ArrowRight" => {
-                player.keys_down[ARROW_RIGHT_KEY_IDX] = true;
-            }
-            "ArrowLeft" => {
-                player.keys_down[ARROW_LEFT_KEY_IDX] = true;
-            }
-            _ => {}
-        }
-    });
-    let _ = window
-        .borrow()
-        .add_event_listener_with_callback("keydown", keydown_handler.as_ref().unchecked_ref());
-
-    let _ = window
-        .borrow()
-        .add_event_listener_with_callback("keyup", keyup_handler.as_ref().unchecked_ref());
-
-    let _ = window
-        .borrow()
-        .add_event_listener_with_callback("mousemove", movemove_handler.as_ref().unchecked_ref());
-
-    keydown_handler.forget();
-    keyup_handler.forget();
-    movemove_handler.forget();
+    // attach input handlers
+    input::attach_user_event_handlers(&window, player.clone());
 
     let f: Rc<RefCell<Option<Closure<dyn Fn()>>>> = Rc::new(RefCell::new(None));
     let g = f.clone();
