@@ -1,3 +1,4 @@
+mod input;
 mod utils;
 
 use std::cell::RefCell;
@@ -9,18 +10,31 @@ use wasm_bindgen::prelude::*;
 use web_sys::console;
 use web_sys::{KeyboardEvent, MouseEvent};
 
-static MAP: &'static [[char; 8]; 8] = &[
+/*
+    bottom left (0,0) origin
+
     ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-    ['w', '0', '0', '0', '0', '0', '0', 'w'],
-    ['w', '0', '0', '0', '0', '0', '0', '1'],
-    ['w', '0', '0', '0', '0', '2', '0', 'w'],
-    ['w', '0', '0', '0', '0', '0', '0', '2'],
-    ['w', '0', '0', '0', '0', '0', '0', 'w'],
-    ['w', '0', '0', '0', '0', '0', '0', '3'],
+    ['w', ' ', '3', ' ', ' ', ' ', ' ', '3'],
+    ['w', ' ', '3', ' ', ' ', ' ', ' ', 'w'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '2'],
+    ['w', ' ', ' ', ' ', ' ', '2', ' ', 'w'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '1'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', 'w'],
+    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+*/
+
+const MAP: [[char; 8]; 8] = [
+    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', 'w'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '1'],
+    ['w', ' ', ' ', ' ', ' ', '2', ' ', 'w'],
+    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '2'],
+    ['w', ' ', '3', ' ', ' ', ' ', ' ', 'w'],
+    ['w', ' ', '3', ' ', ' ', ' ', ' ', '3'],
     ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
 ];
 
-const MAP_GRID_CELL_SIZE_PX: f64 = 30.0;
+const MAP_GRID_CELL_SIZE_PX: f64 = 20.0;
 
 #[derive(Debug)]
 struct Vec2D<T> {
@@ -132,6 +146,7 @@ pub fn main() {
     }));
 
     let player_clone = player.clone();
+
     let movemove_handler = Closure::<dyn FnMut(MouseEvent)>::new(move |event: MouseEvent| {
         let mut player = player_clone.borrow_mut();
         player.mouse_velocity.x = event.movement_x() as f64;
@@ -191,26 +206,8 @@ pub fn main() {
             "ArrowLeft" => {
                 player.keys_down[ARROW_LEFT_KEY_IDX] = true;
             }
-            // No-op for other keys
             _ => {}
         }
-
-        // console::log_3(
-        //     &"position".into(),
-        //     &player.position.x.into(),
-        //     &player.position.y.into(),
-        // );
-        // console::log_3(
-        //     &"direaction".into(),
-        //     &player.direction.x.into(),
-        //     &player.direction.y.into(),
-        // );
-        //
-        // console::log_3(
-        //     &"camera".into(),
-        //     &player.camera.x.into(),
-        //     &player.camera.y.into(),
-        // );
     });
     let _ = window
         .borrow()
@@ -318,7 +315,7 @@ pub fn main() {
                     '1' => "red",
                     '2' => "green",
                     '3' => "blue",
-                    _ => "white",
+                    _ => "grey",
                 };
 
                 map_canvas_2d_context_clone.set_fill_style_str(fill_style);
@@ -336,21 +333,22 @@ pub fn main() {
 
         map_canvas_2d_context_clone.begin_path();
         map_canvas_2d_context_clone.move_to(
-            player.position.x * MAP_GRID_CELL_SIZE_PX,
             player.position.y * MAP_GRID_CELL_SIZE_PX,
+            (player.position.x) * MAP_GRID_CELL_SIZE_PX,
         );
         map_canvas_2d_context_clone.line_to(
             (player.position.x * MAP_GRID_CELL_SIZE_PX)
                 + (player.direction.x * MAP_GRID_CELL_SIZE_PX),
-            (player.position.y * MAP_GRID_CELL_SIZE_PX)
-                + (player.direction.y * MAP_GRID_CELL_SIZE_PX),
+            (player.position.y) * MAP_GRID_CELL_SIZE_PX
+                + (player.direction.y) * MAP_GRID_CELL_SIZE_PX,
         );
         map_canvas_2d_context_clone.stroke();
 
         map_canvas_2d_context_clone.set_fill_style_str("rebeccapurple");
+        console::log_2(&player.position.x.into(), &player.position.y.into());
         map_canvas_2d_context_clone.fill_rect(
-            player.position.x * MAP_GRID_CELL_SIZE_PX,
             player.position.y * MAP_GRID_CELL_SIZE_PX,
+            (MAP.len() as f64 - player.position.x) * MAP_GRID_CELL_SIZE_PX,
             6.0,
             6.0,
         );
@@ -380,11 +378,11 @@ pub fn main() {
             };
 
             let mut map_cell_position_x = player.position.x as i32;
-            // console::log_3(
-            //     &"pos".into(),
-            //     &player.position.x.into(),
-            //     &player.position.y.into(),
-            // );
+            console::log_3(
+                &"pos".into(),
+                &player.position.x.into(),
+                &player.position.y.into(),
+            );
             let mut map_cell_position_y = player.position.y as i32;
             let step_x: i32;
             let step_y: i32;
@@ -417,7 +415,7 @@ pub fn main() {
                     axis_intersected = Axis::Horizontal;
                 }
 
-                if MAP[map_cell_position_x as usize][map_cell_position_y as usize] != '0' {
+                if MAP[map_cell_position_x as usize][map_cell_position_y as usize] != ' ' {
                     wall_was_hit = true;
                 }
             }
