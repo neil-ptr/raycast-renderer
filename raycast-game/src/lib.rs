@@ -8,7 +8,6 @@ use std::f64::consts::PI;
 // use std::ops::MulAssign;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 /*
     bottom left (0,0) origin
@@ -230,8 +229,8 @@ pub fn main() {
 
         map_canvas_2d_context_clone.begin_path();
         map_canvas_2d_context_clone.move_to(
+            player.position.x * MAP_GRID_CELL_SIZE_PX,
             player.position.y * MAP_GRID_CELL_SIZE_PX,
-            (player.position.x) * MAP_GRID_CELL_SIZE_PX,
         );
         map_canvas_2d_context_clone.line_to(
             (player.position.x * MAP_GRID_CELL_SIZE_PX)
@@ -243,12 +242,9 @@ pub fn main() {
 
         map_canvas_2d_context_clone.set_fill_style_str("rebeccapurple");
 
-        console::log_2(&player.position.x.into(), &player.position.y.into());
-        console::log_2(&player.direction.x.into(), &player.direction.y.into());
-
         map_canvas_2d_context_clone.fill_rect(
-            player.position.y * MAP_GRID_CELL_SIZE_PX,
             player.position.x * MAP_GRID_CELL_SIZE_PX,
+            player.position.y * MAP_GRID_CELL_SIZE_PX,
             6.0,
             6.0,
         );
@@ -279,20 +275,6 @@ pub fn main() {
 
             let mut map_cell_position_x = player.position.x as i32;
             let mut map_cell_position_y = player.position.y as i32;
-
-            // let mut map_col_index = player.position.x as i32;
-            // let mut map_row_index = player.position.y as i32;
-
-            console::log_3(
-                &"pos".into(),
-                &player.position.x.into(),
-                &player.position.y.into(),
-            );
-            console::log_3(
-                &"dir".into(),
-                &player.direction.x.into(),
-                &player.direction.y.into(),
-            );
 
             let step_x: i32;
             let step_y: i32;
@@ -336,33 +318,24 @@ pub fn main() {
             };
 
             let line_height = game_canvas.height() as f64 / perpendicular_dist;
-
-            // if f64::floor(camera_width as f64 / 2.0) == ray_idx as f64 {
-            //     console::log_2(&"distx".into(), &side_dist_x.into());
-            //     console::log_2(&"disty".into(), &side_dist_y.into());
-            // }
-
             let center_screen = game_canvas.height() as f64 / 2.0;
             let line_start = center_screen - (line_height / 2.0);
             let line_end = line_start + line_height;
 
             game_canvas_2d_context.begin_path();
-            // Determine the base color
             let base_color = match MAP[map_cell_position_y as usize][map_cell_position_x as usize] {
                 '1' => "red",
                 '2' => "green",
                 '3' => "blue",
                 _ => "black",
             };
-
-            // Adjust color based on axis_intersected
             let color = match axis_intersected {
-                Axis::Vertical => base_color, // Keep the color as is for vertical hits
+                Axis::Vertical => base_color,
                 Axis::Horizontal => match base_color {
-                    "red" => "#8B0000",   // Darker red
-                    "green" => "#006400", // Darker green
-                    "blue" => "#00008B",  // Darker blue
-                    _ => "black",         // Default to black if no color matches
+                    "red" => "#8B0000",
+                    "green" => "#006400",
+                    "blue" => "#00008B",
+                    _ => "black",
                 },
             };
             game_canvas_2d_context.set_stroke_style_str(color);
