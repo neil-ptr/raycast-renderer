@@ -18,7 +18,9 @@ wasm-bindgen = "0.2.84"
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
-web-sys ={ version = "0.3.72", features = ["CanvasRenderingContext2d", "HtmlCanvasElement", "Document", "Window", "console", "KeyboardEvent", "MouseEvent"] } 
+web-sys ={ version = "0.3.72", features = ["CanvasRenderingContext2d", "HtmlCanvasElement", "Document", "Window", "console", "KeyboardEvent", "MouseEvent", 'Headers', 'Request', 'RequestInit', 'RequestMode', 'Response', 'Window', 'Blob'] } 
+wasm-bindgen-futures = "0.4.47"
+image = "0.25.5"
 
 
 [dev-dependencies]

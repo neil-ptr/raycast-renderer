@@ -1,67 +1,167 @@
+mod assets;
 mod input;
 mod utils;
 
 use input::{ARROW_LEFT_KEY_IDX, ARROW_RIGHT_KEY_IDX, A_KEY_IDX, D_KEY_IDX, S_KEY_IDX, W_KEY_IDX};
 use std::cell::RefCell;
 use std::f64::consts::PI;
-// use std::ops::AddAssign;
-// use std::ops::MulAssign;
+use std::ops::AddAssign;
+use std::ops::MulAssign;
+use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
+use web_sys::{js_sys::Uint8Array, Blob};
 
-/*
-    bottom left (0,0) origin
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
 
-    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-    ['w', ' ', '3', ' ', ' ', ' ', ' ', '3'],
-    ['w', ' ', '3', ' ', ' ', ' ', ' ', 'w'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '2'],
-    ['w', ' ', ' ', ' ', ' ', '2', ' ', 'w'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '1'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', 'w'],
-    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-*/
+    // The `console.log` is quite polymorphic, so we can bind it with multiple
+    // signatures. Note that we need to use `js_name` to ensure we always call
+    // `log` in JS.
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_u32(a: u32);
 
-const MAP: [[char; 8]; 8] = [
-    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', 'w'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '1'],
-    ['w', ' ', ' ', ' ', ' ', '2', ' ', 'w'],
-    ['w', ' ', ' ', ' ', ' ', ' ', ' ', '2'],
-    ['w', ' ', '3', ' ', ' ', ' ', ' ', 'w'],
-    ['w', ' ', '3', ' ', ' ', ' ', ' ', '3'],
-    ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+    // Multiple arguments too!
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn log_many(a: &str, b: &str);
+}
+macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
+extern crate console_error_panic_hook;
+
+const MAP: [[char; 24]; 24] = [
+    [
+        'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w',
+        'w', 'w', 'w', 'w', 'w', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '3', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', '3', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', '1', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', '1', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '3', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', '2', ' ', ' ', ' ', ' ', '1', '1', '2', '3', '1', '2', '3', '3', '2', '2', '2',
+        ' ', '2', '1', '1', '3', 'w',
+    ],
+    [
+        'w', ' ', '1', ' ', ' ', ' ', ' ', '2', ' ', '2', ' ', '2', ' ', '1', ' ', '1', '3', ' ',
+        ' ', ' ', '2', '1', '3', 'w',
+    ],
+    [
+        'w', ' ', '1', ' ', ' ', ' ', ' ', '2', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '2', '2', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', '1', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', '3', '1', '3', 'w',
+    ],
+    [
+        'w', ' ', '2', ' ', ' ', ' ', ' ', '2', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '3', '3', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', '2', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '1', '1', ' ',
+        ' ', ' ', '1', '2', '2', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', '1', '2', '2', '1', ' ', '1', '2', '3', '1', '3', '2',
+        '1', '2', '2', '1', '2', 'w',
+    ],
+    [
+        'w', '3', '3', '1', '1', '3', '2', '3', '3', '3', '3', ' ', '2', '2', '3', '2', '1', '2',
+        '1', '2', '3', '1', '1', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', '1', '1', '1', '3', '1', ' ', '3', '2', '3', '2', ' ', '1', '3', '2', '3', '3', '1',
+        '3', '3', '2', '2', '1', 'w',
+    ],
+    [
+        'w', '1', '1', '1', '1', '1', ' ', '3', '1', '2', '3', ' ', '2', '2', '2', '3', '2', '2',
+        '3', '2', '2', '2', '3', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '3', '2', ' ', '1', '2', ' ', ' ', ' ', ' ',
+        ' ', '2', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '2', '1', ' ', ' ', '1', ' ',
+        ' ', '2', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '2', '2', ' ', '2', '1', ' ', ' ', ' ', ' ',
+        ' ', '3', '2', ' ', '3', 'w',
+    ],
+    [
+        'w', ' ', '3', ' ', '2', ' ', ' ', ' ', ' ', '1', '3', ' ', ' ', ' ', ' ', ' ', '2', ' ',
+        ' ', ' ', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', ' ', '2', ' ', ' ', ' ', ' ', ' ', '3', '3', ' ', '3', '1', ' ', ' ', ' ', ' ',
+        ' ', '1', '2', ' ', '1', 'w',
+    ],
+    [
+        'w', ' ', '2', ' ', '2', ' ', ' ', ' ', ' ', '2', '1', ' ', '3', '3', ' ', ' ', '1', ' ',
+        ' ', '3', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '1', '1', ' ', '3', '2', ' ', ' ', ' ', ' ',
+        ' ', '3', ' ', ' ', ' ', 'w',
+    ],
+    [
+        'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w',
+        'w', 'w', 'w', 'w', 'w', 'w',
+    ],
 ];
 
-const MAP_GRID_CELL_SIZE_PX: f64 = 20.0;
+const MAP_GRID_CELL_SIZE_PX: f64 = 10.0;
 
-#[derive(Debug)]
 struct Vec2D<T> {
     x: T,
     y: T,
 }
 
-// impl<T> Vec2D<T>
-// where
-//     T: MulAssign + AddAssign + Copy,
-// {
-//     pub fn scale(&mut self, factor: T) {
-//         self.x *= factor;
-//         self.y *= factor;
-//     }
-//
-//     pub fn add(&mut self, other: Vec2D<T>) {
-//         self.x += other.x;
-//         self.y += other.y;
-//     }
-// }
-//
-// #[derive(Debug)]
-// struct Game {
-//     players: Vec<Player>,
-// }
+impl<T> Vec2D<T>
+where
+    T: MulAssign + AddAssign + Copy,
+{
+    pub fn scale(&mut self, factor: T) {
+        self.x *= factor;
+        self.y *= factor;
+    }
 
-#[derive(Debug)]
+    pub fn add(&mut self, other: Vec2D<T>) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
+
+struct Game {
+    entities: Vec<Entity>,
+    players: Vec<Player>,
+}
+
 pub struct Player {
     position: Vec2D<f64>,
     direction: Vec2D<f64>,
@@ -70,21 +170,44 @@ pub struct Player {
     mouse_velocity: Vec2D<f64>,
 }
 
+struct Entity {
+    position: Vec2D<f64>,
+}
+
 enum Axis {
     Vertical,
     Horizontal,
 }
 
-const WALKING_SPEED: f64 = 0.025;
-const ROTATION_SPEED: f64 = 0.75 * (PI / 180.0); // 10 degrees converted to radians
+const WALKING_SPEED: f64 = 0.1;
+const ROTATION_SPEED: f64 = 2.0 * (PI / 180.0); // 10 degrees converted to radians
 
-#[wasm_bindgen(start)]
-pub fn main() {
-    utils::set_panic_hook();
+#[wasm_bindgen]
+pub async fn main() {
+    #[cfg(feature = "console_error_panic_hook")]
+    console_error_panic_hook::set_once();
 
     // initialize canvases
     let window = Rc::new(RefCell::new(web_sys::window().unwrap()));
     let document = window.borrow().document().unwrap();
+
+    let result = assets::get_asset("backrooms_wallpaper.png".into(), &window.borrow()).await;
+    match result {
+        Ok(blob_js_val) => {
+            let blob = Blob::from(blob_js_val);
+            let uint8_array = Uint8Array::new(&blob);
+            let u8_vector = uint8_array.to_vec();
+            let length = u8_vector.len();
+            console_log!("{:?}", length);
+        }
+        Err(err) => {
+            console_log!("{:?}", err);
+        }
+    }
+    // console::log_2(
+    //     &String::from_utf8(u8_vector).unwrap().into(),
+    //     &length.into(),
+    // );
 
     let game_canvas_element = document.get_element_by_id("game-viewport").unwrap();
     let game_canvas: web_sys::HtmlCanvasElement = game_canvas_element
@@ -112,7 +235,7 @@ pub fn main() {
 
     // initialize game state
     let player = Rc::new(RefCell::new(Player {
-        position: Vec2D { x: 2.0, y: 2.0 },
+        position: Vec2D { x: 4.0, y: 4.0 },
         direction: Vec2D { x: 1.0, y: 0.0 },
         camera: Vec2D { x: 0.0, y: 0.66 },
         keys_down: [false, false, false, false, false, false],

@@ -16,10 +16,11 @@
 </head>
 <body>
   <script type="module">
-    import init from './raycast_game.js';
+    import init, { main } from './raycast_game.js';
 
     async function run() {
       await init();
+      await main();
     }
 
     run().catch(console.error);

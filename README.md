@@ -15,7 +15,7 @@ No major frameworks or libraries used really, wanted to write the raycaster from
 
 ### Raycasting game engine
 - rust
-- rust-wasm
+- wasm
 - HTML Canvas
 
 ### Backend
